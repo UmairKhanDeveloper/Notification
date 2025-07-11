@@ -8,11 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,30 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.notification.ui.theme.NotificationTheme
-
-class NotificationDetailsActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            NotificationTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Notification()
-                }
-            }
-        }
-    }
-}
 
 @Composable
-fun Notification() {
+fun NotificationCenter() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        NotificationCenterHelper1.createNotificationChannel(context)
+        NotificationCenterHelper.createNotificationChannel(context)
     }
 
     val notificationPermission = rememberLauncherForActivityResult(
@@ -73,7 +53,7 @@ fun Notification() {
         onResult = { granted ->
             if (granted) {
                 Toast.makeText(context, "✅ Permission Granted", Toast.LENGTH_SHORT).show()
-                NotificationCenterHelper1.showNotification(context)
+                NotificationCenterHelper.showNotification(context)
             } else {
                 Toast.makeText(context, "❌ Permission Denied", Toast.LENGTH_SHORT).show()
             }
@@ -123,7 +103,7 @@ fun Notification() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else {
-                        NotificationCenterHelper1.showNotification(context)
+                        NotificationCenterHelper.showNotification(context)
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -142,9 +122,7 @@ fun Notification() {
         }
     }
 }
-
-
-object NotificationCenterHelper1 {
+object NotificationCenterHelper {
     private const val CHANNEL_ID = "Default Notification"
 
     fun createNotificationChannel(context: Context) {
@@ -184,7 +162,7 @@ object NotificationCenterHelper1 {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val dismissIntent = Intent(context, NotificationDismissReceiver1::class.java).apply {
+        val dismissIntent = Intent(context, NotificationDismissReceiver::class.java).apply {
             putExtra("notification_id", 1001)
         }
         val dismissPendingIntent = PendingIntent.getBroadcast(
@@ -221,7 +199,7 @@ object NotificationCenterHelper1 {
     }
 }
 
-class NotificationDismissReceiver1 : BroadcastReceiver() {
+class NotificationDismissReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val notificationId = intent.getIntExtra("notification_id", -1)
         if (notificationId != -1) {
